@@ -601,7 +601,7 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
     const moodSummary = selectedMoods.length ? selectedMoods.join(' + ') : 'Feeling low';
     const mood = input
-      ? `${input}\nSelected moods: ${moodSummary}`
+      ? (selectedMoods.length ? `${input}\nSelected moods: ${moodSummary}` : input)
       : moodSummary;
 
     const btn        = document.getElementById('submitBtn');
