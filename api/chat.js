@@ -16,6 +16,7 @@ You understand that these old songs carry wisdom, poetry, and emotion that can h
 RULES:
 - Recommend ONLY old classical Hindi film songs — from roughly 1940s to early 1980s
 - Pick songs where the lyrics or mood DIRECTLY match the person's emotional state
+- If multiple moods are provided, balance all of them instead of focusing only on the first one
 - Never recommend the same obvious songs every time — explore the vast treasure of Hindi music
 - Consider singers like Lata Mangeshkar, Mohammed Rafi, Kishore Kumar, Mukesh, Hemant Kumar, Talat Mahmood, Geeta Dutt, Asha Bhosle and many more
 - Consider music directors like S.D. Burman, R.D. Burman, Naushad, Madan Mohan, Shankar Jaikishan, Salil Chowdhury and more
@@ -30,10 +31,33 @@ RESPONSE FORMAT — return ONLY valid JSON, nothing else, no markdown, no explan
   "why": "One short sentence — why this song for this mood"
 }`;
 
-async function tryGemini(mood, category) {
+function buildUserMessage({ mood, selectedMoods = [], userText = "", avoidSongs = [] }) {
+  const selectedMoodsText = selectedMoods.length
+    ? selectedMoods.map((m) => `- ${m}`).join("\n")
+    : "- (none provided)";
+  const avoidSongsText = avoidSongs.length
+    ? avoidSongs.map((s) => `- ${s}`).join("\n")
+    : "- (none)";
+
+  return [
+    "Primary feeling context:",
+    mood,
+    "",
+    "Selected moods (treat as a blend):",
+    selectedMoodsText,
+    "",
+    "User text (if any):",
+    userText || "(none)",
+    "",
+    "Avoid repeating these recently suggested songs unless no better match exists:",
+    avoidSongsText,
+  ].join("\n");
+}
+
+async function tryGemini({ mood, selectedMoods, userText, avoidSongs }) {
   if (!process.env.GEMINI_API_KEY) return null;
 
-  const userMessage = `My mood category: ${category}\n\nWhat I'm feeling: ${mood}`;
+  const userMessage = buildUserMessage({ mood, selectedMoods, userText, avoidSongs });
 
   for (const model of GEMINI_MODELS) {
     try {
@@ -62,10 +86,10 @@ async function tryGemini(mood, category) {
   return null;
 }
 
-async function tryGroq(mood, category) {
+async function tryGroq({ mood, selectedMoods, userText, avoidSongs }) {
   if (!process.env.GROQ_API_KEY) return null;
 
-  const userMessage = `My mood category: ${category}\n\nWhat I'm feeling: ${mood}`;
+  const userMessage = buildUserMessage({ mood, selectedMoods, userText, avoidSongs });
 
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -158,15 +182,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { mood, category } = req.body || {};
+  const { mood, selectedMoods = [], userText = "", avoidSongs = [] } = req.body || {};
   if (!mood) {
     return res.status(400).json({ error: "No mood provided" });
   }
 
-  const moodCategory = category || "Feeling low";
+  const context = { mood, selectedMoods, userText, avoidSongs };
 
   // Try Gemini first, then Groq
-  const result = await tryGemini(mood, moodCategory) || await tryGroq(mood, moodCategory);
+  const result = await tryGemini(context) || await tryGroq(context);
 
   if (!result) {
     return res.status(500).json({ error: "Could not find a song right now. Please try again." });
