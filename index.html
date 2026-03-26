@@ -645,21 +645,24 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     document.getElementById('songWhy').textContent = song.why || '';
 
     // YouTube embed using search query
-    const query = encodeURIComponent(song.searchQuery || `${song.song} ${song.singer}`);
+    const searchText = song.searchQuery || `${song.song} ${song.singer}`;
+    const query = encodeURIComponent(searchText);
     const ytWrap = document.getElementById('ytEmbed');
     const ytFallback = document.getElementById('ytFallback');
     const ytLink = document.getElementById('ytLink');
     const ytSearchUrl = `https://www.youtube.com/results?search_query=${query}`;
+    const ytWatchUrl = song.youtube?.watchUrl || ytSearchUrl;
+    const ytEmbedUrl = song.youtube?.embedUrl || `https://www.youtube.com/embed?listType=search&list=${query}`;
 
-    // Try embed first — YouTube search embed
+    // Prefer a verified embeddable video from backend. Fallback to YouTube search embed.
     ytWrap.innerHTML = `<iframe
-      src="https://www.youtube.com/embed?listType=search&list=${query}&autoplay=1"
+      src="${ytEmbedUrl}"
       allow="autoplay; encrypted-media"
       allowfullscreen
     ></iframe>`;
 
     // Always show YouTube link as fallback
-    ytLink.href = ytSearchUrl;
+    ytLink.href = ytWatchUrl;
     ytFallback.classList.add('on');
 
     document.getElementById('songInfo').classList.add('on');

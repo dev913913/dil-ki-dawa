@@ -5,6 +5,8 @@ const GEMINI_MODELS = [
   "gemma-3-27b-it",
 ];
 
+const YOUTUBE_WATCH_BASE = "https://www.youtube.com/watch?v=";
+
 const SYSTEM_PROMPT = `You are a wise, gentle curator of old classical Hindi songs — a musical healer who has spent decades understanding the deep connection between music and the human heart.
 
 When someone shares their mood, feeling, or problem with you, you find the ONE perfect old Hindi song that speaks to exactly what they are feeling. You have encyclopedic knowledge of Hindi film songs from the 1940s to 1980s — the golden era of Indian cinema music.
@@ -94,6 +96,63 @@ async function tryGroq(mood, category) {
   return null;
 }
 
+function extractVideoIdsFromYoutubeHtml(html) {
+  const ids = new Set();
+  const regex = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
+  let match;
+
+  while ((match = regex.exec(html)) !== null) {
+    ids.add(match[1]);
+    if (ids.size >= 8) break;
+  }
+
+  return [...ids];
+}
+
+async function isEmbeddableYoutubeVideo(videoId) {
+  const watchUrl = `${YOUTUBE_WATCH_BASE}${videoId}`;
+  const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`;
+
+  try {
+    const res = await fetch(oEmbedUrl, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function findEmbeddableYoutubeVideo(searchQuery) {
+  if (!searchQuery) return null;
+
+  try {
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+    const res = await fetch(searchUrl, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    const candidateIds = extractVideoIdsFromYoutubeHtml(html);
+
+    for (const videoId of candidateIds) {
+      const embeddable = await isEmbeddableYoutubeVideo(videoId);
+      if (embeddable) {
+        return {
+          videoId,
+          watchUrl: `${YOUTUBE_WATCH_BASE}${videoId}`,
+          embedUrl: `https://www.youtube.com/embed/${videoId}`,
+        };
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -120,6 +179,12 @@ export default async function handler(req, res) {
       .replace(/```/g, "")
       .trim();
     const song = JSON.parse(clean);
+
+    const embedData = await findEmbeddableYoutubeVideo(song.searchQuery || `${song.song} ${song.singer}`);
+    if (embedData) {
+      song.youtube = embedData;
+    }
+
     return res.status(200).json({ song, source: result.source });
   } catch {
     // If JSON parse fails, return raw text
