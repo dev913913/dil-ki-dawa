@@ -586,9 +586,10 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
   let selectedMood = '';
 
   function selectMood(el, mood) {
-    document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedMood = mood;
+  el.classList.toggle('selected');
+  const selected = [...document.querySelectorAll('.mood-chip.selected')]
+    .map(c => c.textContent.trim());
+  selectedMood = selected.join(' + ');
   }
 
   async function findSong() {
