@@ -583,24 +583,26 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 </div>
 
 <script>
-  let selectedMood = '';
+  let selectedMoods = [];
+  let recentSongs = [];
 
   function selectMood(el, mood) {
   el.classList.toggle('selected');
-  const selected = [...document.querySelectorAll('.mood-chip.selected')]
+  selectedMoods = [...document.querySelectorAll('.mood-chip.selected')]
     .map(c => c.textContent.trim());
-  selectedMood = selected.join(' + ');
   }
 
   async function findSong() {
     const input = document.getElementById('userInput').value.trim();
-    if (!input && !selectedMood) {
+    if (!input && !selectedMoods.length) {
       alert("Please share what you're feeling or select a mood first.");
       return;
     }
 
-    const mood = input || selectedMood;
-    const category = selectedMood || 'Feeling low';
+    const moodSummary = selectedMoods.length ? selectedMoods.join(' + ') : 'Feeling low';
+    const mood = input
+      ? `${input}\nSelected moods: ${moodSummary}`
+      : moodSummary;
 
     const btn        = document.getElementById('submitBtn');
     const placeholder = document.getElementById('placeholder');
@@ -618,7 +620,12 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
       const res  = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mood, category })
+        body: JSON.stringify({
+          mood,
+          selectedMoods,
+          userText: input,
+          avoidSongs: recentSongs.slice(-5)
+        })
       });
 
       const data = await res.json();
@@ -644,6 +651,7 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     document.getElementById('songMeta').innerHTML =
       `${song.singer || ''}<span>·</span>${song.film || ''}<span>·</span>${song.year || ''}`;
     document.getElementById('songWhy').textContent = song.why || '';
+    if (song.song) recentSongs.push(song.song);
 
     // YouTube embed using search query
     const searchText = song.searchQuery || `${song.song} ${song.singer}`;
@@ -684,7 +692,8 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     document.getElementById('ytEmbed').innerHTML = '';
     document.getElementById('ytFallback').classList.remove('on');
     document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
-    selectedMood = '';
+    selectedMoods = [];
+    recentSongs = [];
   }
 
   document.getElementById('userInput').addEventListener('keydown', e => {
