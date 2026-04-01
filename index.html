@@ -8,17 +8,17 @@
 <style>
 :root {
   --bg: #0e0a06;
-  --bg2: #161008;
-  --panel: #1c1409;
-  --panel2: #221a0d;
-  --gold: #C8922A;
-  --gold2: #E8B84B;
-  --gold3: #F5D58A;
-  --amber: #8B5E1A;
-  --cream: #F0E6D0;
-  --muted: rgba(240,230,208,0.45);
-  --border: rgba(200,146,42,0.2);
-  --border2: rgba(200,146,42,0.5);
+  --panel: #1a140f;
+  --panel-soft: rgba(26, 20, 15, 0.72);
+  --gold: #dfa837;
+  --gold-hover: #f5c45b;
+  --gold-text: #fce8a1;
+  --amber: #b0741a;
+  --cream: #fdf6e3;
+  --muted: rgba(253, 246, 227, 0.75); /* Increased contrast */
+  --muted-darker: rgba(253, 246, 227, 0.5);
+  --border: rgba(223, 168, 55, 0.3);
+  --border-focus: rgba(223, 168, 55, 0.7);
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,8 +37,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(200,146,42,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, rgba(139,94,26,0.08) 0%, transparent 60%);
+    radial-gradient(circle at 50% 0%, rgba(223, 168, 55, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 50% 100%, rgba(176, 116, 26, 0.1) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -48,10 +48,9 @@ body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
-  opacity: 0.4;
 }
 
 .wrap {
@@ -62,31 +61,39 @@ body::after {
   padding: 0 20px 80px;
 }
 
+.glass {
+  background: linear-gradient(180deg, rgba(33, 26, 19, 0.45), rgba(20, 15, 11, 0.65));
+  border: 1px solid rgba(223, 168, 55, 0.18);
+  backdrop-filter: blur(4px);
+  border-radius: 14px;
+}
+
 /* ── HEADER ── */
 header {
   text-align: center;
-  padding: 56px 0 40px;
+  padding: 56px 0 30px;
   animation: fadeUp 0.8s ease both;
 }
 
 .hindi-title {
   font-family: 'Noto Serif Devanagari', serif;
-  font-size: clamp(38px, 8vw, 58px);
+  font-size: clamp(42px, 8vw, 64px);
   font-weight: 600;
-  color: var(--gold2);
+  color: var(--gold-text);
   line-height: 1.1;
-  text-shadow: 0 0 40px rgba(200,146,42,0.35), 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 0 30px rgba(223, 168, 55, 0.4), 0 2px 4px rgba(0,0,0,0.8);
   letter-spacing: 2px;
 }
 
 .english-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(13px, 3vw, 17px);
+  font-size: clamp(14px, 3vw, 18px);
   font-style: italic;
-  color: var(--muted);
-  letter-spacing: 5px;
+  color: var(--gold);
+  letter-spacing: 4px;
   text-transform: uppercase;
-  margin-top: 6px;
+  margin-top: 8px;
+  font-weight: 500;
 }
 
 .divider-ornament {
@@ -94,7 +101,7 @@ header {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin: 20px 0 0;
+  margin: 24px 0 0;
 }
 
 .div-line {
@@ -102,22 +109,23 @@ header {
   max-width: 120px;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 .div-diamond {
   width: 6px; height: 6px;
-  background: var(--gold2);
+  background: var(--gold-text);
   transform: rotate(45deg);
-  opacity: 0.6;
+  opacity: 0.8;
+  box-shadow: 0 0 8px var(--gold);
 }
 
 .tagline {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 14px;
-  color: rgba(240,230,208,0.35);
-  margin-top: 14px;
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 18px;
   letter-spacing: 0.5px;
   line-height: 1.6;
 }
@@ -130,95 +138,114 @@ header {
 
 .section-label {
   font-family: 'Playfair Display', serif;
-  font-size: 11px;
-  letter-spacing: 4px;
-  color: rgba(200,146,42,0.5);
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--gold);
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  font-weight: 700;
 }
 
 .mood-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .mood-chip {
-  background: transparent;
+  background: rgba(26, 20, 15, 0.6);
   border: 1px solid var(--border);
   color: var(--muted);
   font-family: 'Lato', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  padding: 7px 16px;
+  padding: 8px 18px;
   cursor: pointer;
   transition: all 0.2s;
-  border-radius: 2px;
+  border-radius: 24px; /* Pill shape for better aesthetics */
   letter-spacing: 0.3px;
 }
 
 .mood-chip:hover {
   border-color: var(--gold);
-  color: var(--gold2);
-  background: rgba(200,146,42,0.06);
+  color: var(--cream);
+  background: rgba(223, 168, 55, 0.1);
 }
 
 .mood-chip.selected {
-  border-color: var(--gold2);
-  color: var(--gold2);
-  background: rgba(200,146,42,0.1);
-  box-shadow: 0 0 12px rgba(200,146,42,0.1);
+  border-color: var(--gold-text);
+  color: #0e0a06;
+  background: var(--gold);
+  font-weight: 700;
+  box-shadow: 0 0 16px rgba(223, 168, 55, 0.3);
 }
 
 /* ── INPUT ── */
 .input-section {
-  margin-top: 28px;
+  margin-top: 36px;
   animation: fadeUp 0.8s 0.18s ease both;
+  padding: 20px;
 }
 
 .input-label {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 15px;
-  color: rgba(240,230,208,0.5);
-  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 12px;
   display: block;
   letter-spacing: 0.3px;
 }
 
 textarea {
   width: 100%;
-  background: var(--panel);
+  background: var(--panel-soft);
   border: 1px solid var(--border);
-  border-top: 2px solid rgba(200,146,42,0.3);
+  border-radius: 8px; /* Softer corners */
   color: var(--cream);
   font-family: 'Lato', sans-serif;
-  font-size: 15px;
-  font-weight: 300;
+  font-size: 16px;
+  font-weight: 400;
   padding: 18px 20px;
   resize: none;
   outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  line-height: 1.8;
-  border-radius: 0;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  line-height: 1.6;
   letter-spacing: 0.3px;
 }
 
 textarea::placeholder {
-  color: rgba(240,230,208,0.2);
+  color: var(--muted-darker);
   font-style: italic;
 }
 
 textarea:focus {
-  border-color: rgba(200,146,42,0.5);
-  box-shadow: 0 0 0 1px rgba(200,146,42,0.15), 0 4px 20px rgba(200,146,42,0.05);
+  background: rgba(26, 20, 15, 0.9);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(223, 168, 55, 0.15);
 }
 
 /* ── BUTTON ── */
 .btn-row {
   display: flex;
-  gap: 3px;
-  margin-top: 3px;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.input-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--muted-darker);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+.shortcut-hint { font-style: italic; }
+
+.char-count.warn {
+  color: var(--gold-text);
 }
 
 button.submit {
@@ -226,15 +253,16 @@ button.submit {
   background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
   color: #0e0a06;
   border: none;
+  border-radius: 8px;
   font-family: 'Playfair Display', serif;
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   padding: 16px 24px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(200,146,42,0.25);
+  box-shadow: 0 4px 15px rgba(223, 168, 55, 0.2);
   position: relative;
   overflow: hidden;
 }
@@ -244,119 +272,121 @@ button.submit::after {
   position: absolute;
   top: 0; left: -100%;
   width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
   transition: left 0.5s;
 }
 
 button.submit:hover::after { left: 150%; }
-button.submit:hover { box-shadow: 0 6px 28px rgba(200,146,42,0.4); transform: translateY(-1px); }
+button.submit:hover {
+  box-shadow: 0 6px 24px rgba(223, 168, 55, 0.4);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--gold-hover) 0%, var(--amber) 100%);
+}
 button.submit:active { transform: translateY(1px); }
-button.submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+button.submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; filter: grayscale(50%); }
 
 button.clear-btn {
   background: transparent;
   border: 1px solid var(--border);
+  border-radius: 8px;
   color: var(--muted);
   font-family: 'Lato', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  padding: 16px 18px;
+  padding: 16px 24px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
+button.clear-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-text);
+  background: rgba(223, 168, 55, 0.05);
+}
 
 /* ── RESPONSE / SONG CARD ── */
 .song-section {
-  margin-top: 32px;
+  margin-top: 40px;
   animation: fadeUp 0.8s 0.24s ease both;
 }
 
 .song-card {
-  background: var(--panel);
+  background: linear-gradient(180deg, rgba(33,24,17,0.95), rgba(25,18,13,0.95));
   border: 1px solid var(--border);
-  border-top: 2px solid var(--gold);
-  padding: 28px 28px 24px;
-  min-height: 120px;
+  border-radius: 12px;
+  padding: 32px 28px;
+  min-height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  transition: box-shadow 0.3s;
+  transition: box-shadow 0.3s, border-color 0.3s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 .song-card.active {
-  box-shadow: 0 0 40px rgba(200,146,42,0.1);
+  border-color: var(--border-focus);
+  box-shadow: 0 8px 40px rgba(223, 168, 55, 0.15);
 }
-
-/* Corner marks */
-.cm {
-  position: absolute;
-  width: 10px; height: 10px;
-  border-color: rgba(200,146,42,0.35);
-  border-style: solid;
-}
-.cm.tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
-.cm.tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
-.cm.bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
-.cm.br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
 
 .placeholder {
   text-align: center;
 }
 
 .placeholder-symbol {
-  font-size: 32px;
-  opacity: 0.15;
+  font-size: 36px;
+  color: var(--gold);
+  opacity: 0.3;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .placeholder-text {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 13px;
-  color: rgba(240,230,208,0.2);
+  font-size: 16px;
+  color: var(--muted-darker);
   letter-spacing: 1px;
 }
 
 /* Loading */
-.loading { display: none; flex-direction: column; align-items: center; gap: 12px; }
+.loading { display: none; flex-direction: column; align-items: center; gap: 16px; }
 .loading.on { display: flex; }
 
 .vinyl {
-  width: 44px; height: 44px;
+  width: 50px; height: 50px;
   border-radius: 50%;
   background: conic-gradient(
-    #2a1e0a 0deg, #1a1208 30deg,
-    #2a1e0a 60deg, #1a1208 90deg,
-    #2a1e0a 120deg, #1a1208 150deg,
-    #2a1e0a 180deg, #1a1208 210deg,
-    #2a1e0a 240deg, #1a1208 270deg,
-    #2a1e0a 300deg, #1a1208 330deg,
-    #2a1e0a 360deg
+    #332412 0deg, #1c140a 30deg,
+    #332412 60deg, #1c140a 90deg,
+    #332412 120deg, #1c140a 150deg,
+    #332412 180deg, #1c140a 210deg,
+    #332412 240deg, #1c140a 270deg,
+    #332412 300deg, #1c140a 330deg,
+    #332412 360deg
   );
-  border: 2px solid rgba(200,146,42,0.3);
+  border: 2px solid rgba(223, 168, 55, 0.4);
   animation: spin 1.5s linear infinite;
   position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
 .vinyl::after {
   content: '';
   position: absolute;
-  inset: 30%;
+  inset: 35%;
   border-radius: 50%;
   background: var(--gold);
-  opacity: 0.6;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.8);
 }
 
 .loading-text {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 13px;
-  color: rgba(200,146,42,0.6);
+  font-size: 15px;
+  color: var(--gold);
   letter-spacing: 2px;
   animation: flicker 2s ease infinite;
 }
@@ -365,37 +395,62 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 .song-info { display: none; width: 100%; }
 .song-info.on { display: block; animation: fadeUp 0.5s ease both; }
 
+.song-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: -8px;
+  margin-bottom: 14px;
+}
+
+.mini-btn {
+  border: 1px solid var(--border);
+  color: var(--gold-text);
+  background: rgba(223, 168, 55, 0.08);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+}
+
+.mini-btn:hover { border-color: var(--border-focus); background: rgba(223, 168, 55, 0.15); }
+
 .song-name {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(20px, 4vw, 26px);
+  font-size: clamp(24px, 5vw, 32px);
   font-weight: 700;
-  color: var(--gold2);
+  color: var(--gold-text);
   line-height: 1.2;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .song-meta {
   font-family: 'Lato', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
+  font-weight: 400;
 }
 
 .song-meta span {
-  color: rgba(200,146,42,0.6);
-  margin: 0 6px;
+  color: var(--gold);
+  margin: 0 8px;
+  opacity: 0.7;
 }
 
 .song-why {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 13px;
-  color: rgba(240,230,208,0.35);
-  margin: 12px 0 20px;
+  font-size: 15px;
+  color: var(--cream);
+  margin: 16px 0 24px;
   line-height: 1.6;
-  border-left: 2px solid rgba(200,146,42,0.2);
-  padding-left: 12px;
+  border-left: 3px solid var(--border-focus);
+  padding-left: 16px;
+  background: linear-gradient(90deg, rgba(223,168,55,0.05), transparent);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
 }
 
 /* YouTube embed */
@@ -404,8 +459,11 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
   width: 100%;
   padding-bottom: 56.25%;
   background: #000;
-  margin-top: 4px;
-  border: 1px solid rgba(200,146,42,0.15);
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
 .yt-wrap iframe {
@@ -418,7 +476,8 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
 .yt-fallback {
   display: none;
-  margin-top: 16px;
+  margin-top: 20px;
+  text-align: center;
 }
 
 .yt-fallback.on { display: block; }
@@ -427,23 +486,27 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(200,146,42,0.08);
-  border: 1px solid var(--border2);
-  color: var(--gold2);
+  background: rgba(223, 168, 55, 0.1);
+  border: 1px solid var(--border-focus);
+  border-radius: 8px;
+  color: var(--gold-text);
   font-family: 'Lato', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 12px 20px;
+  padding: 14px 24px;
   text-decoration: none;
   transition: all 0.2s;
 }
 
-.yt-link:hover { background: rgba(200,146,42,0.14); }
+.yt-link:hover {
+  background: rgba(223, 168, 55, 0.2);
+  transform: translateY(-1px);
+}
 
 /* ── FOOTER ── */
 .footer {
-  margin-top: 56px;
+  margin-top: 64px;
   text-align: center;
   animation: fadeUp 0.8s 0.4s ease both;
 }
@@ -459,8 +522,8 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 .footer-quote {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 13px;
-  color: rgba(200,146,42,0.25);
+  font-size: 15px;
+  color: var(--muted-darker);
   letter-spacing: 1px;
   line-height: 1.7;
 }
@@ -475,15 +538,17 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
 @keyframes flicker {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  50%       { opacity: 0.5; }
 }
 
 /* ── MOBILE ── */
 @media (max-width: 500px) {
-  .hindi-title { font-size: 38px; }
+  .hindi-title { font-size: 44px; }
   .btn-row { flex-direction: column; }
-  button.clear-btn { padding: 12px; }
-  .song-card { padding: 20px 16px; }
+  button.submit, button.clear-btn { width: 100%; }
+  .song-card { padding: 24px 20px; }
+  .input-section { padding: 16px; }
+  .input-meta { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
 </style>
 </head>
@@ -491,7 +556,6 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
 <div class="wrap">
 
-  <!-- HEADER -->
   <header>
     <div class="hindi-title">दिल की दवा</div>
     <div class="english-title">Dil Ki Dawa · Medicine for the Heart</div>
@@ -506,7 +570,6 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     </div>
   </header>
 
-  <!-- MOOD CATEGORY -->
   <div class="mood-section">
     <div class="section-label">◆ Your mood</div>
     <div class="mood-chips">
@@ -521,8 +584,7 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     </div>
   </div>
 
-  <!-- INPUT -->
-  <div class="input-section">
+  <div class="input-section glass">
     <label class="input-label" for="userInput">Tell me what's on your mind...</label>
     <textarea
       id="userInput"
@@ -530,18 +592,19 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
       placeholder="Share what you're feeling, or what's troubling you... even a few words are enough."
       maxlength="600"
     ></textarea>
+    <div class="input-meta">
+      <div class="shortcut-hint">Tip: press <strong>Ctrl + Enter</strong> to search quickly.</div>
+      <div class="char-count" id="charCount">0 / 600</div>
+    </div>
     <div class="btn-row">
-      <button class="submit" id="submitBtn" onclick="findSong()">✦ Find My Song</button>
+      <button class="submit" id="submitBtn" onclick="findSong()" disabled>✦ Find My Song</button>
       <button class="clear-btn" onclick="clearAll()">Clear</button>
     </div>
   </div>
 
-  <!-- SONG CARD -->
   <div class="song-section">
     <div class="section-label">◆ Your song</div>
     <div class="song-card" id="songCard">
-      <div class="cm tl"></div><div class="cm tr"></div>
-      <div class="cm bl"></div><div class="cm br"></div>
 
       <div class="placeholder" id="placeholder">
         <span class="placeholder-symbol">♪</span>
@@ -557,6 +620,9 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
         <div class="song-name" id="songName"></div>
         <div class="song-meta" id="songMeta"></div>
         <div class="song-why" id="songWhy"></div>
+        <div class="song-actions">
+          <button class="mini-btn" id="copyBtn" onclick="copySong()">Copy song details</button>
+        </div>
         <div class="yt-wrap" id="ytEmbed"></div>
         <div class="yt-fallback" id="ytFallback">
           <a class="yt-link" id="ytLink" href="#" target="_blank" rel="noopener">
@@ -567,7 +633,6 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     </div>
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">
     <div class="footer-ornament">
       <div class="div-line"></div>
@@ -585,11 +650,26 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 <script>
   let selectedMoods = [];
   let recentSongs = [];
+  let currentSong = null;
+
+  function updateCharCount() {
+    const inputEl = document.getElementById('userInput');
+    const count = inputEl.value.length;
+    const el = document.getElementById('charCount');
+    el.textContent = `${count} / 600`;
+    el.classList.toggle('warn', count > 520);
+  }
+
+  function updateSubmitState() {
+    const input = document.getElementById('userInput').value.trim();
+    document.getElementById('submitBtn').disabled = !input && !selectedMoods.length;
+  }
 
   function selectMood(el, mood) {
-  el.classList.toggle('selected');
-  selectedMoods = [...document.querySelectorAll('.mood-chip.selected')]
-    .map(c => c.textContent.trim());
+    el.classList.toggle('selected');
+    selectedMoods = [...document.querySelectorAll('.mood-chip.selected')]
+      .map(c => c.textContent.trim());
+    updateSubmitState();
   }
 
   async function findSong() {
@@ -648,10 +728,11 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
   function showSong(song) {
     document.getElementById('songName').textContent = song.song || '';
-    document.getElementById('songMeta').innerHTML =
-      `${song.singer || ''}<span>·</span>${song.film || ''}<span>·</span>${song.year || ''}`;
+    const metaParts = [song.singer, song.film, song.year].filter(Boolean);
+    document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
     document.getElementById('songWhy').textContent = song.why || '';
     if (song.song) recentSongs.push(song.song);
+    currentSong = song;
 
     // YouTube embed using search query
     const searchText = song.searchQuery || `${song.song} ${song.singer}`;
@@ -694,11 +775,34 @@ button.clear-btn:hover { border-color: var(--gold); color: var(--gold2); }
     document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
     selectedMoods = [];
     recentSongs = [];
+    currentSong = null;
+    updateCharCount();
+    updateSubmitState();
+  }
+
+  async function copySong() {
+    if (!currentSong?.song) return;
+    const line = `${currentSong.song} — ${currentSong.singer || 'Unknown singer'} (${currentSong.film || 'Unknown film'}, ${currentSong.year || 'Unknown year'})`;
+    try {
+      await navigator.clipboard.writeText(line);
+      document.getElementById('copyBtn').textContent = 'Copied!';
+      setTimeout(() => {
+        document.getElementById('copyBtn').textContent = 'Copy song details';
+      }, 1200);
+    } catch {
+      alert('Could not copy to clipboard.');
+    }
   }
 
   document.getElementById('userInput').addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.ctrlKey) findSong();
   });
+  document.getElementById('userInput').addEventListener('input', () => {
+    updateCharCount();
+    updateSubmitState();
+  });
+  updateCharCount();
+  updateSubmitState();
 </script>
 </body>
 </html>
