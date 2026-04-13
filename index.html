@@ -651,6 +651,7 @@ button.clear-btn:hover {
   let selectedMoods = [];
   let recentSongs = [];
   let currentSong = null;
+  let isLoading = false;
 
   function updateCharCount() {
     const inputEl = document.getElementById('userInput');
@@ -662,7 +663,7 @@ button.clear-btn:hover {
 
   function updateSubmitState() {
     const input = document.getElementById('userInput').value.trim();
-    document.getElementById('submitBtn').disabled = !input && !selectedMoods.length;
+    document.getElementById('submitBtn').disabled = isLoading || (!input && !selectedMoods.length);
   }
 
   function selectMood(el, mood) {
@@ -673,6 +674,8 @@ button.clear-btn:hover {
   }
 
   async function findSong() {
+    if (isLoading) return;
+
     const input = document.getElementById('userInput').value.trim();
     if (!input && !selectedMoods.length) {
       alert("Please share what you're feeling or select a mood first.");
@@ -684,13 +687,13 @@ button.clear-btn:hover {
       ? `${input}\nSelected moods: ${moodSummary}`
       : moodSummary;
 
-    const btn        = document.getElementById('submitBtn');
     const placeholder = document.getElementById('placeholder');
     const loading    = document.getElementById('loading');
     const songInfo   = document.getElementById('songInfo');
     const songCard   = document.getElementById('songCard');
 
-    btn.disabled = true;
+    isLoading = true;
+    updateSubmitState();
     placeholder.style.display = 'none';
     songInfo.classList.remove('on');
     loading.classList.add('on');
@@ -720,10 +723,11 @@ button.clear-btn:hover {
     } catch (err) {
       showError("Something went wrong. Please check your connection and try again.");
       console.error(err);
+    } finally {
+      isLoading = false;
+      loading.classList.remove('on');
+      updateSubmitState();
     }
-
-    loading.classList.remove('on');
-    btn.disabled = false;
   }
 
   function showSong(song) {
