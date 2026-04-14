@@ -440,20 +440,44 @@ button.clear-btn:hover {
 }
 
 .fav-item {
-  width: 100%;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(223, 168, 55, 0.06);
   border: 1px solid var(--border);
   border-radius: 8px;
+  padding: 6px;
+}
+
+.fav-open-btn {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: none;
+  background: transparent;
   color: var(--cream);
-  padding: 10px 12px;
-  cursor: pointer;
+  padding: 6px;
   line-height: 1.3;
+  cursor: pointer;
 }
 
 .fav-item:hover {
   border-color: var(--border-focus);
   background: rgba(223, 168, 55, 0.14);
+}
+
+.fav-remove-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--gold-text);
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fav-remove-btn:hover {
+  border-color: var(--border-focus);
 }
 
 .fav-name { font-weight: 700; color: var(--gold-text); font-size: 13px; }
@@ -730,18 +754,34 @@ button.clear-btn:hover {
 
     emptyEl.style.display = 'none';
     favorites.forEach((song, index) => {
-      const btn = document.createElement('button');
-      btn.className = 'fav-item';
-      btn.innerHTML = `
+      const row = document.createElement('div');
+      row.className = 'fav-item';
+
+      const openBtn = document.createElement('button');
+      openBtn.className = 'fav-open-btn';
+      openBtn.innerHTML = `
         <div class="fav-name">${song.song || 'Untitled song'}</div>
         <div class="fav-meta">${song.singer || 'Unknown singer'} · ${song.film || 'Unknown film'} · ${song.year || 'Year N/A'}</div>
       `;
-      btn.onclick = () => {
+      openBtn.onclick = () => {
         showSong(song, { skipRecent: true });
         window.scrollTo({ top: document.getElementById('songCard').offsetTop - 24, behavior: 'smooth' });
       };
-      btn.title = 'Load this favorite';
-      listEl.appendChild(btn);
+      openBtn.title = 'Load this favorite';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'fav-remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.onclick = () => {
+        favorites.splice(index, 1);
+        persistFavorites();
+        renderFavorites();
+        updateFavoriteButton();
+      };
+
+      row.appendChild(openBtn);
+      row.appendChild(removeBtn);
+      listEl.appendChild(row);
     });
   }
 
@@ -854,6 +894,9 @@ button.clear-btn:hover {
   }
 
   function showSong(song, { skipRecent = false } = {}) {
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('songCard').classList.add('active');
     document.getElementById('songName').textContent = song.song || '';
     const metaParts = [song.singer, song.film, song.year].filter(Boolean);
     document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
