@@ -194,7 +194,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No mood provided" });
   }
 
-  const context = { mood, selectedMoods, userText, moodSignals, avoidSongs };
+  // Normalize list inputs to ensure they are arrays of strings
+  const normalizeToStringArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.map(item => String(item));
+    }
+    return [String(value)];
+  };
+
+  const normalizedSelectedMoods = normalizeToStringArray(selectedMoods);
+  const normalizedMoodSignals = normalizeToStringArray(moodSignals);
+  const normalizedAvoidSongs = normalizeToStringArray(avoidSongs);
+
+  const context = {
+    mood,
+    selectedMoods: normalizedSelectedMoods,
+    userText,
+    moodSignals: normalizedMoodSignals,
+    avoidSongs: normalizedAvoidSongs
+  };
 
   // Try Gemini first, then Groq
   const result = await tryGemini(context) || await tryGroq(context);
