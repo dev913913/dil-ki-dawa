@@ -759,10 +759,17 @@ button.clear-btn:hover {
 
       const openBtn = document.createElement('button');
       openBtn.className = 'fav-open-btn';
-      openBtn.innerHTML = `
-        <div class="fav-name">${song.song || 'Untitled song'}</div>
-        <div class="fav-meta">${song.singer || 'Unknown singer'} · ${song.film || 'Unknown film'} · ${song.year || 'Year N/A'}</div>
-      `;
+openBtn.innerHTML = '';
+const nameDiv = document.createElement('div');
+nameDiv.className = 'fav-name';
+nameDiv.textContent = song.song || 'Untitled song';
+
+const metaDiv = document.createElement('div');
+metaDiv.className = 'fav-meta';
+metaDiv.textContent = [song.singer || 'Unknown singer', song.film || 'Unknown film', song.year || 'Year N/A'].filter(Boolean).join(' · ');
+
+openBtn.appendChild(nameDiv);
+openBtn.appendChild(metaDiv);
       openBtn.onclick = () => {
         showSong(song, { skipRecent: true });
         window.scrollTo({ top: document.getElementById('songCard').offsetTop - 24, behavior: 'smooth' });
