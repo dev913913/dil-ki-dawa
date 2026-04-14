@@ -689,8 +689,8 @@ button.clear-btn:hover {
         <div class="song-meta" id="songMeta"></div>
         <div class="song-why" id="songWhy"></div>
         <div class="song-actions">
-          <button class="mini-btn" onclick="tryAnotherSong()">Try another song</button>
-          <button class="mini-btn" id="favBtn" onclick="toggleFavorite()">♡ Save favorite</button>
+          <button type="button" class="mini-btn" onclick="tryAnotherSong()">Try another song</button>
+          <button type="button" class="mini-btn" id="favBtn" onclick="toggleFavorite()">♡ Save favorite</button>
           <button class="mini-btn" id="copyBtn" onclick="copySong()">Copy song details</button>
         </div>
         <div class="yt-wrap" id="ytEmbed"></div>
@@ -979,7 +979,7 @@ button.clear-btn:hover {
         searchQuery: currentSong.searchQuery,
         youtube: currentSong.youtube || null
       });
-      favorites = favorites.slice(0, 20);
+      favorites = favorites.slice(0, 10);
     }
     persistFavorites();
     updateFavoriteButton();
