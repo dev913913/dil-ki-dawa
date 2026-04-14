@@ -759,17 +759,16 @@ button.clear-btn:hover {
 
       const openBtn = document.createElement('button');
       openBtn.className = 'fav-open-btn';
-openBtn.innerHTML = '';
-const nameDiv = document.createElement('div');
-nameDiv.className = 'fav-name';
-nameDiv.textContent = song.song || 'Untitled song';
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'fav-name';
+      nameDiv.textContent = song.song || 'Untitled song';
 
-const metaDiv = document.createElement('div');
-metaDiv.className = 'fav-meta';
-metaDiv.textContent = [song.singer || 'Unknown singer', song.film || 'Unknown film', song.year || 'Year N/A'].filter(Boolean).join(' · ');
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'fav-meta';
+      metaDiv.textContent = [song.singer || 'Unknown singer', song.film || 'Unknown film', song.year || 'Year N/A'].filter(Boolean).join(' · ');
 
-openBtn.appendChild(nameDiv);
-openBtn.appendChild(metaDiv);
+      openBtn.appendChild(nameDiv);
+      openBtn.appendChild(metaDiv);
       openBtn.onclick = () => {
         showSong(song, { skipRecent: true });
         window.scrollTo({ top: document.getElementById('songCard').offsetTop - 24, behavior: 'smooth' });
@@ -810,7 +809,7 @@ openBtn.appendChild(metaDiv);
       { mood: 'anxiety', terms: ['anxious', 'panic', 'worried', 'restless', 'overthinking'] },
       { mood: 'loneliness', terms: ['alone', 'lonely', 'missing', 'no one', 'empty'] },
       { mood: 'anger', terms: ['angry', 'frustrated', 'irritated', 'annoyed', 'furious'] },
-      { mood: 'confusion', terms: ['confused', 'lost', 'stuck', 'unsure', 'don't know', "don't know"] },
+      { mood: 'confusion', terms: ['confused', 'lost', 'stuck', 'unsure', "don't know"] },
       { mood: 'healing', terms: ['peace', 'calm', 'healing', 'relief', 'better'] }
     ];
 
@@ -906,16 +905,7 @@ openBtn.appendChild(metaDiv);
     document.getElementById('songCard').classList.add('active');
     document.getElementById('songName').textContent = song.song || '';
     const metaParts = [song.singer, song.film, song.year].filter(Boolean);
-const metaEl = document.getElementById('songMeta');
-metaEl.textContent = ''; // Clear existing content
-metaParts.forEach((part, index) => {
-  if (index > 0) {
-    const separator = document.createElement('span');
-    separator.textContent = '·';
-    metaEl.appendChild(separator);
-  }
-  metaEl.appendChild(document.createTextNode(part));
-});
+    document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
     document.getElementById('songWhy').textContent = song.why || '';
     if (song.song && !skipRecent) recentSongs.push(song.song);
     currentSong = song;
