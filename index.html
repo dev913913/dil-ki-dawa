@@ -906,7 +906,16 @@ openBtn.appendChild(metaDiv);
     document.getElementById('songCard').classList.add('active');
     document.getElementById('songName').textContent = song.song || '';
     const metaParts = [song.singer, song.film, song.year].filter(Boolean);
-    document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
+const metaEl = document.getElementById('songMeta');
+metaEl.textContent = ''; // Clear existing content
+metaParts.forEach((part, index) => {
+  if (index > 0) {
+    const separator = document.createElement('span');
+    separator.textContent = '·';
+    metaEl.appendChild(separator);
+  }
+  metaEl.appendChild(document.createTextNode(part));
+});
     document.getElementById('songWhy').textContent = song.why || '';
     if (song.song && !skipRecent) recentSongs.push(song.song);
     currentSong = song;
