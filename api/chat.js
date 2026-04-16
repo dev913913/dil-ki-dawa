@@ -9,8 +9,11 @@ const YOUTUBE_WATCH_BASE = "https://www.youtube.com/watch?v=";
 const responseCache = new Map();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-function getCacheKey({ mood, selectedMoods, userText }) {
-  return `${mood}|${[...selectedMoods].sort().join(",")}|${userText.trim().toLowerCase().slice(0, 50)}`;
+function getCacheKey({ mood, selectedMoods, userText, avoidSongs }) {
+  const normalizedAvoidSongs = avoidSongs
+    ? [...avoidSongs].map(s => s.trim()).sort().join(",")
+    : "";
+  return `${mood}|${[...selectedMoods].sort().join(",")}|${userText.trim().toLowerCase().slice(0, 50)}|${normalizedAvoidSongs}`;
 }
 
 function getFromCache(key) {
@@ -24,7 +27,7 @@ function getFromCache(key) {
 }
 
 function setCache(key, data) {
-  if (responseCache.size > 100) {
+  if (responseCache.size >= 100) {
     // Evict oldest entry to prevent memory bloat
     const oldest = responseCache.keys().next().value;
     responseCache.delete(oldest);
@@ -212,7 +215,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No mood provided" });
   }
 
-  const cacheKey = getCacheKey({ mood, selectedMoods, userText });
+  const cacheKey = getCacheKey({ mood, selectedMoods, userText, avoidSongs });
   const cached = getFromCache(cacheKey);
   if (cached) return res.status(200).json(cached);
 
