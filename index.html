@@ -549,7 +549,9 @@ button.clear-btn:hover {
   .song-card { padding: 24px 20px; }
   .input-section { padding: 16px; }
   .input-meta { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .mood-chips { gap: 8px; }
 }
+
 </style>
 </head>
 <body>
@@ -573,14 +575,18 @@ button.clear-btn:hover {
   <div class="mood-section">
     <div class="section-label">◆ Your mood</div>
     <div class="mood-chips">
-      <button class="mood-chip" onclick="selectMood(this, '💔 Heartbroken')">💔 Heartbroken</button>
       <button class="mood-chip" onclick="selectMood(this, '😔 Feeling low')">😔 Feeling low</button>
       <button class="mood-chip" onclick="selectMood(this, '😤 Frustrated')">😤 Frustrated</button>
       <button class="mood-chip" onclick="selectMood(this, '😰 Anxious')">😰 Anxious</button>
       <button class="mood-chip" onclick="selectMood(this, '🥺 Missing someone')">🥺 Missing someone</button>
-      <button class="mood-chip" onclick="selectMood(this, '😶 Numb / Empty')">😶 Numb</button>
-      <button class="mood-chip" onclick="selectMood(this, '🤔 Lost / Confused')">🤔 Lost</button>
-      <button class="mood-chip" onclick="selectMood(this, '😌 Need peace')">😌 Need peace</button>
+      <button class="mood-chip" onclick="selectMood(this, '😞 Lonely')">😞 Lonely</button>
+      <button class="mood-chip" onclick="selectMood(this, '😕 Overthinking')">😕 Overthinking</button>
+      <button class="mood-chip" onclick="selectMood(this, '🙂 Calm / Okay')">🙂 Calm / Okay</button>
+      <button class="mood-chip" onclick="selectMood(this, '✨ Hopeful')">✨ Hopeful</button>
+      <button class="mood-chip" onclick="selectMood(this, '❤️ In love')">❤️ In love</button>
+      <button class="mood-chip" onclick="selectMood(this, '💪 Need motivation')">💪 Need motivation</button>
+      <button class="mood-chip" onclick="selectMood(this, '😊 Happy')">😊 Happy</button>
+      <button class="mood-chip" onclick="selectMood(this, '🌈 Grateful')">🌈 Grateful</button>
     </div>
   </div>
 
@@ -683,7 +689,7 @@ button.clear-btn:hover {
       return;
     }
 
-    const moodSummary = selectedMoods.length ? selectedMoods.join(' + ') : 'Feeling low';
+    const moodSummary = selectedMoods.length ? selectedMoods.join(' + ') : 'No specific mood selected';
     const mood = input
       ? `${input}\nSelected moods: ${moodSummary}`
       : moodSummary;
