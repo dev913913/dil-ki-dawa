@@ -658,17 +658,34 @@ button.clear-btn:hover {
   let recentSongs = [];
   let currentSong = null;
   let isRequestInFlight = false;
+  const MAX_INPUT_LENGTH = 600;
+  const REQUEST_TIMEOUT_MS = 10000;
+  const DEFAULT_PLACEHOLDER_TEXT = 'Your song awaits...';
+
+  function getSanitizedInput() {
+    const inputEl = document.getElementById('userInput');
+    const trimmed = inputEl.value.trim().slice(0, MAX_INPUT_LENGTH);
+    if (inputEl.value !== trimmed) inputEl.value = trimmed;
+    return trimmed;
+  }
+
+  function isMeaningfulRequest(input) {
+    return /[A-Za-z\u0900-\u097F]/.test(input);
+  }
 
   function updateCharCount() {
     const inputEl = document.getElementById('userInput');
+    if (inputEl.value.length > MAX_INPUT_LENGTH) {
+      inputEl.value = inputEl.value.slice(0, MAX_INPUT_LENGTH);
+    }
     const count = inputEl.value.length;
     const el = document.getElementById('charCount');
-    el.textContent = `${count} / 600`;
+    el.textContent = `${count} / ${MAX_INPUT_LENGTH}`;
     el.classList.toggle('warn', count > 520);
   }
 
   function updateSubmitState() {
-    const input = document.getElementById('userInput').value.trim();
+    const input = getSanitizedInput();
     const shouldDisable = isRequestInFlight || (!input && !selectedMoods.length);
     document.getElementById('submitBtn').disabled = shouldDisable;
   }
@@ -683,9 +700,13 @@ button.clear-btn:hover {
   async function findSong() {
     if (isRequestInFlight) return;
 
-    const input = document.getElementById('userInput').value.trim();
+    const input = getSanitizedInput();
     if (!input && !selectedMoods.length) {
       alert("Please share what you're feeling or select a mood first.");
+      return;
+    }
+    if (input && !isMeaningfulRequest(input)) {
+      alert("Please share a meaningful feeling so I can find the right song.");
       return;
     }
 
@@ -706,10 +727,14 @@ button.clear-btn:hover {
     loading.classList.add('on');
     songCard.classList.add('active');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
       const res  = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           mood,
           selectedMoods,
@@ -718,19 +743,28 @@ button.clear-btn:hover {
         })
       });
 
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+
       const data = await res.json();
       console.log("⚡ Source:", data.source);
 
       if (data.song) {
         showSong(data.song);
       } else {
-        showError("The music finder couldn't find a song right now. Please try again.");
+        showError(data.error || "The music finder couldn't find a song right now. Please try again.");
       }
 
     } catch (err) {
-      showError("Something went wrong. Please check your connection and try again.");
+      if (err.name === 'AbortError') {
+        showError("Request timed out after 10 seconds. Please try again.");
+      } else {
+        showError("Something went wrong. Please check your connection and try again.");
+      }
       console.error(err);
     } finally {
+      clearTimeout(timeoutId);
       isRequestInFlight = false;
       loading.classList.remove('on');
       updateSubmitState();
@@ -740,53 +774,77 @@ button.clear-btn:hover {
   function showSong(song) {
     document.getElementById('songName').textContent = song.song || '';
     const metaParts = [song.singer, song.film, song.year].filter(Boolean);
-    document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
+    const songMetaEl = document.getElementById('songMeta');
+    songMetaEl.textContent = '';
+    metaParts.forEach((part, index) => {
+      const textNode = document.createTextNode(part);
+      songMetaEl.appendChild(textNode);
+      if (index < metaParts.length - 1) {
+        const dot = document.createElement('span');
+        dot.textContent = '·';
+        songMetaEl.appendChild(dot);
+      }
+    });
     document.getElementById('songWhy').textContent = song.why || '';
     if (song.song) recentSongs.push(song.song);
     currentSong = song;
 
-    // YouTube embed using search query
-    const searchText = song.searchQuery || `${song.song} ${song.singer}`;
-    const query = encodeURIComponent(searchText);
     const ytWrap = document.getElementById('ytEmbed');
     const ytFallback = document.getElementById('ytFallback');
     const ytLink = document.getElementById('ytLink');
-    const ytSearchUrl = `https://www.youtube.com/results?search_query=${query}`;
-    const ytWatchUrl = song.youtube?.watchUrl || ytSearchUrl;
-    const ytEmbedUrl = song.youtube?.embedUrl || `https://www.youtube.com/embed?listType=search&list=${query}`;
+    ytWrap.textContent = '';
 
-    // Prefer a verified embeddable video from backend. Fallback to YouTube search embed.
-    ytWrap.innerHTML = `<iframe
-      src="${ytEmbedUrl}"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-    ></iframe>`;
+    // Render player only for a backend-provided valid embed URL.
+    if (song.youtube?.embedUrl) {
+      const iframe = document.createElement('iframe');
+      iframe.src = song.youtube.embedUrl;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.setAttribute('allowfullscreen', '');
+      ytWrap.appendChild(iframe);
+      ytWrap.style.display = 'block';
+    } else {
+      ytWrap.style.display = 'none';
+    }
 
-    // Always show YouTube link as fallback
-    ytLink.href = ytWatchUrl;
-    ytFallback.classList.add('on');
+    // Show fallback link only when backend provides a direct watch URL.
+    if (song.youtube?.watchUrl) {
+      ytLink.href = song.youtube.watchUrl;
+      ytFallback.classList.add('on');
+    } else {
+      ytLink.removeAttribute('href');
+      ytFallback.classList.remove('on');
+    }
 
     document.getElementById('songInfo').classList.add('on');
+    document.getElementById('placeholder').style.display = 'none';
   }
 
   function showError(msg) {
     document.getElementById('placeholder').style.display = 'block';
     document.getElementById('placeholder').querySelector('.placeholder-text').textContent = msg;
+    document.getElementById('songInfo').classList.remove('on');
+    document.getElementById('songCard').classList.remove('active');
+    const ytWrap = document.getElementById('ytEmbed');
+    ytWrap.textContent = '';
+    ytWrap.style.display = 'block';
+    document.getElementById('ytFallback').classList.remove('on');
   }
 
   function clearAll() {
     document.getElementById('userInput').value = '';
     document.getElementById('placeholder').style.display = 'block';
-    document.getElementById('placeholder').querySelector('.placeholder-text').textContent = 'Your song awaits...';
+    document.getElementById('placeholder').querySelector('.placeholder-text').textContent = DEFAULT_PLACEHOLDER_TEXT;
     document.getElementById('songInfo').classList.remove('on');
     document.getElementById('loading').classList.remove('on');
     document.getElementById('songCard').classList.remove('active');
-    document.getElementById('ytEmbed').innerHTML = '';
+    const ytWrap = document.getElementById('ytEmbed');
+    ytWrap.textContent = '';
+    ytWrap.style.display = 'block';
     document.getElementById('ytFallback').classList.remove('on');
     document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
     selectedMoods = [];
-    recentSongs = [];
     currentSong = null;
+    isRequestInFlight = false;
     updateCharCount();
     updateSubmitState();
   }
