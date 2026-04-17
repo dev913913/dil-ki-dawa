@@ -40,6 +40,9 @@ This app is designed as a small emotional companion that connects feelings with 
 - AI-based song suggestions  
 - Explanation for each song  
 - YouTube player  
+- “Try another song” option to get a fresh match  
+- Save favorite songs locally in the browser  
+- Better mood detection using mood chips + text cues  
 - Clean and aesthetic UI  
 
 ---
@@ -54,10 +57,8 @@ This app is designed as a small emotional companion that connects feelings with 
 
 ## 🚀 Future Improvements
 
-- Multiple song suggestions  
-- “Try another song” option  
-- Save favorite songs  
-- Better mood detection  
+- Multiple song suggestions in one response  
+- Share favorites across devices with account sync  
 
 ---
 
