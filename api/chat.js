@@ -6,6 +6,31 @@ const GEMINI_MODELS = [
 ];
 
 const YOUTUBE_WATCH_BASE = "https://www.youtube.com/watch?v=";
+const responseCache = new Map();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function getCacheKey({ mood, selectedMoods, userText }) {
+  return `${mood}|${[...selectedMoods].sort().join(",")}|${userText.trim().toLowerCase().slice(0, 50)}`;
+}
+
+function getFromCache(key) {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    responseCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache(key, data) {
+  if (responseCache.size > 100) {
+    // Evict oldest entry to prevent memory bloat
+    const oldest = responseCache.keys().next().value;
+    responseCache.delete(oldest);
+  }
+  responseCache.set(key, { data, timestamp: Date.now() });
+}
 
 const SYSTEM_PROMPT = `You are a wise, gentle curator of old classical Hindi songs — a musical healer who has spent decades understanding the deep connection between music and the human heart.
 
@@ -187,6 +212,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "No mood provided" });
   }
 
+  const cacheKey = getCacheKey({ mood, selectedMoods, userText });
+  const cached = getFromCache(cacheKey);
+  if (cached) return res.status(200).json(cached);
+
   const context = { mood, selectedMoods, userText, avoidSongs };
 
   // Try Gemini first, then Groq
@@ -209,7 +238,9 @@ export default async function handler(req, res) {
       song.youtube = embedData;
     }
 
-    return res.status(200).json({ song, source: result.source });
+    const finalResponse = { song, source: result.source };
+    setCache(cacheKey, finalResponse);
+    return res.status(200).json(finalResponse);
   } catch {
     // If JSON parse fails, return raw text
     return res.status(200).json({ raw: result.text, source: result.source });
