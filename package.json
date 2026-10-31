@@ -1,0 +1,10 @@
+{
+  "name": "dil-ki-dawa",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mood-based old Hindi song suggestions.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

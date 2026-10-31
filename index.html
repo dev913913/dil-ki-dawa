@@ -4,624 +4,92 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>दिल की दवा — Dil Ki Dawa</title>
+<meta name="description" content="Tell Dil Ki Dawa what you are feeling and it finds an old Hindi song for your heart. हर एहसास का एक गाना होता है।"/>
+<meta name="theme-color" content="#0e0a06"/>
+<link rel="canonical" href="https://dil-ki-dawa.vercel.app/"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Dil Ki Dawa"/>
+<meta property="og:title" content="दिल की दवा — Dil Ki Dawa"/>
+<meta property="og:description" content="Every feeling has a song. Share your mood and get an old Hindi song for it."/>
+<meta property="og:url" content="https://dil-ki-dawa.vercel.app/"/>
+<meta name="twitter:card" content="summary"/>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Noto+Serif+Devanagari:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
-<style>
-:root {
-  --bg: #0e0a06;
-  --panel: #1a140f;
-  --panel-soft: rgba(26, 20, 15, 0.72);
-  --gold: #dfa837;
-  --gold-hover: #f5c45b;
-  --gold-text: #fce8a1;
-  --amber: #b0741a;
-  --cream: #fdf6e3;
-  --muted: rgba(253, 246, 227, 0.75); /* Increased contrast */
-  --muted-darker: rgba(253, 246, 227, 0.5);
-  --border: rgba(223, 168, 55, 0.3);
-  --border-focus: rgba(223, 168, 55, 0.7);
-}
-
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  background: var(--bg);
-  color: var(--cream);
-  font-family: 'Lato', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Warm vignette */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(223, 168, 55, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 50% 100%, rgba(176, 116, 26, 0.1) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Film grain texture */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
-
-.wrap {
-  position: relative;
-  z-index: 1;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 0 20px 80px;
-}
-
-.glass {
-  background: linear-gradient(180deg, rgba(33, 26, 19, 0.45), rgba(20, 15, 11, 0.65));
-  border: 1px solid rgba(223, 168, 55, 0.18);
-  backdrop-filter: blur(4px);
-  border-radius: 14px;
-}
-
-/* ── HEADER ── */
-header {
-  text-align: center;
-  padding: 56px 0 30px;
-  animation: fadeUp 0.8s ease both;
-}
-
-.hindi-title {
-  font-family: 'Noto Serif Devanagari', serif;
-  font-size: clamp(42px, 8vw, 64px);
-  font-weight: 600;
-  color: var(--gold-text);
-  line-height: 1.1;
-  text-shadow: 0 0 30px rgba(223, 168, 55, 0.4), 0 2px 4px rgba(0,0,0,0.8);
-  letter-spacing: 2px;
-}
-
-.english-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(14px, 3vw, 18px);
-  font-style: italic;
-  color: var(--gold);
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  margin-top: 8px;
-  font-weight: 500;
-}
-
-.divider-ornament {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin: 24px 0 0;
-}
-
-.div-line {
-  flex: 1;
-  max-width: 120px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.6;
-}
-
-.div-diamond {
-  width: 6px; height: 6px;
-  background: var(--gold-text);
-  transform: rotate(45deg);
-  opacity: 0.8;
-  box-shadow: 0 0 8px var(--gold);
-}
-
-.tagline {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 16px;
-  color: var(--muted);
-  margin-top: 18px;
-  letter-spacing: 0.5px;
-  line-height: 1.6;
-}
-
-/* ── MOOD CATEGORY ── */
-.mood-section {
-  margin-top: 36px;
-  animation: fadeUp 0.8s 0.1s ease both;
-}
-
-.section-label {
-  font-family: 'Playfair Display', serif;
-  font-size: 13px;
-  letter-spacing: 3px;
-  color: var(--gold);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  font-weight: 700;
-}
-
-.mood-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.mood-chip {
-  background: rgba(26, 20, 15, 0.6);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  padding: 8px 18px;
-  cursor: pointer;
-  transition: all 0.2s;
-  border-radius: 24px; /* Pill shape for better aesthetics */
-  letter-spacing: 0.3px;
-}
-
-.mood-chip:hover {
-  border-color: var(--gold);
-  color: var(--cream);
-  background: rgba(223, 168, 55, 0.1);
-}
-
-.mood-chip.selected {
-  border-color: var(--gold-text);
-  color: #0e0a06;
-  background: var(--gold);
-  font-weight: 700;
-  box-shadow: 0 0 16px rgba(223, 168, 55, 0.3);
-}
-
-/* ── INPUT ── */
-.input-section {
-  margin-top: 36px;
-  animation: fadeUp 0.8s 0.18s ease both;
-  padding: 20px;
-}
-
-.input-label {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 16px;
-  color: var(--muted);
-  margin-bottom: 12px;
-  display: block;
-  letter-spacing: 0.3px;
-}
-
-textarea {
-  width: 100%;
-  background: var(--panel-soft);
-  border: 1px solid var(--border);
-  border-radius: 8px; /* Softer corners */
-  color: var(--cream);
-  font-family: 'Lato', sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  padding: 18px 20px;
-  resize: none;
-  outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-}
-
-textarea::placeholder {
-  color: var(--muted-darker);
-  font-style: italic;
-}
-
-textarea:focus {
-  background: rgba(26, 20, 15, 0.9);
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(223, 168, 55, 0.15);
-}
-
-/* ── BUTTON ── */
-.btn-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.input-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  color: var(--muted-darker);
-  font-size: 12px;
-  letter-spacing: 0.4px;
-}
-
-.shortcut-hint { font-style: italic; }
-
-.char-count.warn {
-  color: var(--gold-text);
-}
-
-button.submit {
-  flex: 1;
-  background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
-  color: #0e0a06;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Playfair Display', serif;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 16px 24px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(223, 168, 55, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-button.submit::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 60%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-  transition: left 0.5s;
-}
-
-button.submit:hover::after { left: 150%; }
-button.submit:hover {
-  box-shadow: 0 6px 24px rgba(223, 168, 55, 0.4);
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, var(--gold-hover) 0%, var(--amber) 100%);
-}
-button.submit:active { transform: translateY(1px); }
-button.submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; filter: grayscale(50%); }
-
-button.clear-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--muted);
-  font-family: 'Lato', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 16px 24px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-button.clear-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold-text);
-  background: rgba(223, 168, 55, 0.05);
-}
-
-/* ── RESPONSE / SONG CARD ── */
-.song-section {
-  margin-top: 40px;
-  animation: fadeUp 0.8s 0.24s ease both;
-}
-
-.song-card {
-  background: linear-gradient(180deg, rgba(33,24,17,0.95), rgba(25,18,13,0.95));
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px 28px;
-  min-height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: box-shadow 0.3s, border-color 0.3s;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-.song-card.active {
-  border-color: var(--border-focus);
-  box-shadow: 0 8px 40px rgba(223, 168, 55, 0.15);
-}
-
-.placeholder {
-  text-align: center;
-}
-
-.placeholder-symbol {
-  font-size: 36px;
-  color: var(--gold);
-  opacity: 0.3;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.placeholder-text {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 16px;
-  color: var(--muted-darker);
-  letter-spacing: 1px;
-}
-
-/* Loading */
-.loading { display: none; flex-direction: column; align-items: center; gap: 16px; }
-.loading.on { display: flex; }
-
-.vinyl {
-  width: 50px; height: 50px;
-  border-radius: 50%;
-  background: conic-gradient(
-    #332412 0deg, #1c140a 30deg,
-    #332412 60deg, #1c140a 90deg,
-    #332412 120deg, #1c140a 150deg,
-    #332412 180deg, #1c140a 210deg,
-    #332412 240deg, #1c140a 270deg,
-    #332412 300deg, #1c140a 330deg,
-    #332412 360deg
-  );
-  border: 2px solid rgba(223, 168, 55, 0.4);
-  animation: spin 1.5s linear infinite;
-  position: relative;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-.vinyl::after {
-  content: '';
-  position: absolute;
-  inset: 35%;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.8);
-}
-
-.loading-text {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--gold);
-  letter-spacing: 2px;
-  animation: flicker 2s ease infinite;
-}
-
-/* Song info */
-.song-info { display: none; width: 100%; }
-.song-info.on { display: block; animation: fadeUp 0.5s ease both; }
-
-.song-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: -8px;
-  margin-bottom: 14px;
-}
-
-.mini-btn {
-  border: 1px solid var(--border);
-  color: var(--gold-text);
-  background: rgba(223, 168, 55, 0.08);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  letter-spacing: 0.6px;
-  cursor: pointer;
-}
-
-.mini-btn:hover { border-color: var(--border-focus); background: rgba(223, 168, 55, 0.15); }
-
-.song-name {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(24px, 5vw, 32px);
-  font-weight: 700;
-  color: var(--gold-text);
-  line-height: 1.2;
-  margin-bottom: 8px;
-}
-
-.song-meta {
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-  font-weight: 400;
-}
-
-.song-meta span {
-  color: var(--gold);
-  margin: 0 8px;
-  opacity: 0.7;
-}
-
-.song-why {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--cream);
-  margin: 16px 0 24px;
-  line-height: 1.6;
-  border-left: 3px solid var(--border-focus);
-  padding-left: 16px;
-  background: linear-gradient(90deg, rgba(223,168,55,0.05), transparent);
-  padding: 12px 16px;
-  border-radius: 0 8px 8px 0;
-}
-
-/* YouTube embed */
-.yt-wrap {
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%;
-  background: #000;
-  margin-top: 8px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-}
-
-.yt-wrap iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.yt-fallback {
-  display: none;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.yt-fallback.on { display: block; }
-
-.yt-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(223, 168, 55, 0.1);
-  border: 1px solid var(--border-focus);
-  border-radius: 8px;
-  color: var(--gold-text);
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  padding: 14px 24px;
-  text-decoration: none;
-  transition: all 0.2s;
-}
-
-.yt-link:hover {
-  background: rgba(223, 168, 55, 0.2);
-  transform: translateY(-1px);
-}
-
-/* ── FOOTER ── */
-.footer {
-  margin-top: 64px;
-  text-align: center;
-  animation: fadeUp 0.8s 0.4s ease both;
-}
-
-.footer-ornament {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.footer-quote {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 15px;
-  color: var(--muted-darker);
-  letter-spacing: 1px;
-  line-height: 1.7;
-}
-
-/* ── KEYFRAMES ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-@keyframes flicker {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
-}
-
-/* ── MOBILE ── */
-@media (max-width: 500px) {
-  .hindi-title { font-size: 44px; }
-  .btn-row { flex-direction: column; }
-  button.submit, button.clear-btn { width: 100%; }
-  .song-card { padding: 24px 20px; }
-  .input-section { padding: 16px; }
-  .input-meta { flex-direction: column; align-items: flex-start; gap: 4px; }
-  .mood-chips { gap: 8px; }
-}
-
-</style>
+<link rel="stylesheet" href="assets/style.css"/>
 </head>
 <body>
 
 <div class="wrap">
 
   <header>
-    <div class="hindi-title">दिल की दवा</div>
+    <h1 class="hindi-title">दिल की दवा</h1>
     <div class="english-title">Dil Ki Dawa · Medicine for the Heart</div>
-    <div class="divider-ornament">
+    <div class="divider-ornament" aria-hidden="true">
       <div class="div-line"></div>
       <div class="div-diamond"></div>
       <div class="div-line"></div>
     </div>
-    <div class="tagline">
+    <p class="tagline">
       Tell me what weighs on your heart.<br/>
       An old song will find you.
-    </div>
+    </p>
   </header>
 
-  <div class="mood-section">
-    <div class="section-label">◆ Your mood</div>
-    <div class="mood-chips">
-      <button class="mood-chip" onclick="selectMood(this, '😔 Feeling low')">😔 Feeling low</button>
-      <button class="mood-chip" onclick="selectMood(this, '😤 Frustrated')">😤 Frustrated</button>
-      <button type="button" class="mood-chip" onclick="selectMood(this, '😡 Angry')">😡 Angry</button>
-      <button type="button" class="mood-chip" onclick="selectMood(this, '😒 Jealous')">😒 Jealous</button>
-      <button class="mood-chip" onclick="selectMood(this, '😰 Anxious')">😰 Anxious</button>
-      <button class="mood-chip" onclick="selectMood(this, '🥺 Missing someone')">🥺 Missing someone</button>
-      <button class="mood-chip" onclick="selectMood(this, '😞 Lonely')">😞 Lonely</button>
-      <button class="mood-chip" onclick="selectMood(this, '😕 Overthinking')">😕 Overthinking</button>
-      <button class="mood-chip" onclick="selectMood(this, '🙂 Calm / Okay')">🙂 Calm / Okay</button>
-      <button class="mood-chip" onclick="selectMood(this, '✨ Hopeful')">✨ Hopeful</button>
-      <button class="mood-chip" onclick="selectMood(this, '❤️ In love')">❤️ In love</button>
-      <button class="mood-chip" onclick="selectMood(this, '💪 Need motivation')">💪 Need motivation</button>
-      <button class="mood-chip" onclick="selectMood(this, '😊 Happy')">😊 Happy</button>
-      <button class="mood-chip" onclick="selectMood(this, '🌈 Grateful')">🌈 Grateful</button>
-    </div>
-  </div>
+  <noscript><p class="notice">This page needs JavaScript to find your song. Please turn it on and reload.</p></noscript>
 
-  <div class="input-section glass">
+  <section class="mood-section" aria-labelledby="moodLabel">
+    <h2 class="section-label" id="moodLabel">◆ Your mood</h2>
+    <div class="mood-chips" id="moodChips" role="group" aria-labelledby="moodLabel">
+      <button type="button" class="mood-chip" aria-pressed="false">😔 Feeling low</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😤 Frustrated</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😡 Angry</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😒 Jealous</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😰 Anxious</button>
+      <button type="button" class="mood-chip" aria-pressed="false">🥺 Missing someone</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😞 Lonely</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😕 Overthinking</button>
+      <button type="button" class="mood-chip" aria-pressed="false">🙂 Calm / Okay</button>
+      <button type="button" class="mood-chip" aria-pressed="false">✨ Hopeful</button>
+      <button type="button" class="mood-chip" aria-pressed="false">❤️ In love</button>
+      <button type="button" class="mood-chip" aria-pressed="false">💪 Need motivation</button>
+      <button type="button" class="mood-chip" aria-pressed="false">😊 Happy</button>
+      <button type="button" class="mood-chip" aria-pressed="false">🌈 Grateful</button>
+    </div>
+  </section>
+
+  <section class="input-section glass">
     <label class="input-label" for="userInput">Tell me what's on your mind...</label>
     <textarea
       id="userInput"
       rows="4"
       placeholder="Share what you're feeling, or what's troubling you... even a few words are enough."
       maxlength="600"
+      aria-describedby="charCount"
     ></textarea>
     <div class="input-meta">
       <div class="shortcut-hint">Tip: press <strong>Ctrl + Enter</strong> to search quickly.</div>
       <div class="char-count" id="charCount">0 / 600</div>
     </div>
     <div class="btn-row">
-      <button class="submit" id="submitBtn" onclick="findSong()" disabled>✦ Find My Song</button>
-      <button class="clear-btn" onclick="clearAll()">Clear</button>
+      <button type="button" class="submit" id="submitBtn" disabled>✦ Find My Song</button>
+      <button type="button" class="clear-btn" id="clearBtn">Clear</button>
     </div>
-  </div>
+    <p class="privacy-note">Your words are sent to an AI service to pick a song. Nothing is saved on our side.</p>
+  </section>
 
-  <div class="song-section">
-    <div class="section-label">◆ Your song</div>
-    <div class="song-card" id="songCard">
+  <section class="song-section" aria-labelledby="songLabel">
+    <h2 class="section-label" id="songLabel">◆ Your song</h2>
+    <div class="song-card" id="songCard" aria-live="polite" aria-busy="false">
 
       <div class="placeholder" id="placeholder">
-        <span class="placeholder-symbol">♪</span>
-        <div class="placeholder-text">Your song awaits...</div>
+        <span class="placeholder-symbol" aria-hidden="true">♪</span>
+        <div class="placeholder-text" id="placeholderText">Your song awaits...</div>
       </div>
 
       <div class="loading" id="loading">
-        <div class="vinyl"></div>
+        <div class="vinyl" aria-hidden="true"></div>
         <div class="loading-text">Searching the golden era...</div>
       </div>
 
@@ -629,21 +97,37 @@ button.clear-btn:hover {
         <div class="song-name" id="songName"></div>
         <div class="song-meta" id="songMeta"></div>
         <div class="song-why" id="songWhy"></div>
-        <div class="song-actions">
-          <button class="mini-btn" id="copyBtn" onclick="copySong()">Copy song details</button>
+
+        <div class="care-note" id="careNote" hidden>
+          <strong>If things feel too heavy, you don't have to carry them alone.</strong>
+          Please talk to someone you trust. In India you can call Tele-MANAS on
+          <a href="tel:14416">14416</a> (free, 24x7). If you are in immediate danger, call your local emergency number.
         </div>
-        <div class="yt-wrap" id="ytEmbed"></div>
+
+        <div class="song-actions">
+          <button type="button" class="mini-btn" id="againBtn">↻ Try another song</button>
+          <button type="button" class="mini-btn" id="saveBtn" aria-pressed="false">♡ Save</button>
+          <button type="button" class="mini-btn" id="copyBtn">Copy details</button>
+        </div>
+
+        <div class="yt-wrap" id="ytEmbed" hidden></div>
+        <p class="yt-status" id="ytStatus"></p>
         <div class="yt-fallback" id="ytFallback">
-          <a class="yt-link" id="ytLink" href="#" target="_blank" rel="noopener">
+          <a class="yt-link" id="ytLink" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">
             ▶ Listen on YouTube
           </a>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <section class="fav-section" id="favSection" aria-labelledby="favLabel" hidden>
+    <h2 class="section-label" id="favLabel">◆ Saved songs</h2>
+    <ul class="fav-list" id="favList"></ul>
+  </section>
 
   <div class="footer">
-    <div class="footer-ornament">
+    <div class="footer-ornament" aria-hidden="true">
       <div class="div-line"></div>
       <div class="div-diamond"></div>
       <div class="div-line"></div>
@@ -656,167 +140,6 @@ button.clear-btn:hover {
 
 </div>
 
-<script>
-  let selectedMoods = [];
-  let recentSongs = [];
-  let currentSong = null;
-  let isRequestInFlight = false;
-
-  function updateCharCount() {
-    const inputEl = document.getElementById('userInput');
-    const count = inputEl.value.length;
-    const el = document.getElementById('charCount');
-    el.textContent = `${count} / 600`;
-    el.classList.toggle('warn', count > 520);
-  }
-
-  function updateSubmitState() {
-    const input = document.getElementById('userInput').value.trim();
-    const shouldDisable = isRequestInFlight || (!input && !selectedMoods.length);
-    document.getElementById('submitBtn').disabled = shouldDisable;
-  }
-
-  function selectMood(el, mood) {
-    el.classList.toggle('selected');
-    selectedMoods = [...document.querySelectorAll('.mood-chip.selected')]
-      .map(c => c.textContent.trim());
-    updateSubmitState();
-  }
-
-  async function findSong() {
-    if (isRequestInFlight) return;
-
-    const input = document.getElementById('userInput').value.trim();
-    if (!input && !selectedMoods.length) {
-      alert("Please share what you're feeling or select a mood first.");
-      return;
-    }
-
-    const moodSummary = selectedMoods.length ? selectedMoods.join(' + ') : 'No specific mood selected';
-    const mood = input
-      ? `${input}\nSelected moods: ${moodSummary}`
-      : moodSummary;
-
-    const placeholder = document.getElementById('placeholder');
-    const loading    = document.getElementById('loading');
-    const songInfo   = document.getElementById('songInfo');
-    const songCard   = document.getElementById('songCard');
-
-    isRequestInFlight = true;
-    updateSubmitState();
-    placeholder.style.display = 'none';
-    songInfo.classList.remove('on');
-    loading.classList.add('on');
-    songCard.classList.add('active');
-
-    try {
-      const res  = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mood,
-          selectedMoods,
-          userText: input,
-          avoidSongs: recentSongs.slice(-5)
-        })
-      });
-
-      const data = await res.json();
-      console.log("⚡ Source:", data.source);
-
-      if (data.song) {
-        showSong(data.song);
-      } else {
-        showError("The music finder couldn't find a song right now. Please try again.");
-      }
-
-    } catch (err) {
-      showError("Something went wrong. Please check your connection and try again.");
-      console.error(err);
-    } finally {
-      isRequestInFlight = false;
-      loading.classList.remove('on');
-      updateSubmitState();
-    }
-  }
-
-  function showSong(song) {
-    document.getElementById('songName').textContent = song.song || '';
-    const metaParts = [song.singer, song.film, song.year].filter(Boolean);
-    document.getElementById('songMeta').innerHTML = metaParts.join('<span>·</span>');
-    document.getElementById('songWhy').textContent = song.why || '';
-    if (song.song) recentSongs.push(song.song);
-    currentSong = song;
-
-    // YouTube embed using search query
-    const searchText = song.searchQuery || `${song.song} ${song.singer}`;
-    const query = encodeURIComponent(searchText);
-    const ytWrap = document.getElementById('ytEmbed');
-    const ytFallback = document.getElementById('ytFallback');
-    const ytLink = document.getElementById('ytLink');
-    const ytSearchUrl = `https://www.youtube.com/results?search_query=${query}`;
-    const ytWatchUrl = song.youtube?.watchUrl || ytSearchUrl;
-    const ytEmbedUrl = song.youtube?.embedUrl || `https://www.youtube.com/embed?listType=search&list=${query}`;
-
-    // Prefer a verified embeddable video from backend. Fallback to YouTube search embed.
-    ytWrap.innerHTML = `<iframe
-      src="${ytEmbedUrl}"
-      allow="autoplay; encrypted-media"
-      allowfullscreen
-    ></iframe>`;
-
-    // Always show YouTube link as fallback
-    ytLink.href = ytWatchUrl;
-    ytFallback.classList.add('on');
-
-    document.getElementById('songInfo').classList.add('on');
-  }
-
-  function showError(msg) {
-    document.getElementById('placeholder').style.display = 'block';
-    document.getElementById('placeholder').querySelector('.placeholder-text').textContent = msg;
-  }
-
-  function clearAll() {
-    document.getElementById('userInput').value = '';
-    document.getElementById('placeholder').style.display = 'block';
-    document.getElementById('placeholder').querySelector('.placeholder-text').textContent = 'Your song awaits...';
-    document.getElementById('songInfo').classList.remove('on');
-    document.getElementById('loading').classList.remove('on');
-    document.getElementById('songCard').classList.remove('active');
-    document.getElementById('ytEmbed').innerHTML = '';
-    document.getElementById('ytFallback').classList.remove('on');
-    document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('selected'));
-    selectedMoods = [];
-    recentSongs = [];
-    currentSong = null;
-    updateCharCount();
-    updateSubmitState();
-  }
-
-  async function copySong() {
-    if (!currentSong?.song) return;
-    const line = `${currentSong.song} — ${currentSong.singer || 'Unknown singer'} (${currentSong.film || 'Unknown film'}, ${currentSong.year || 'Unknown year'})`;
-    try {
-      await navigator.clipboard.writeText(line);
-      document.getElementById('copyBtn').textContent = 'Copied!';
-      setTimeout(() => {
-        document.getElementById('copyBtn').textContent = 'Copy song details';
-      }, 1200);
-    } catch {
-      alert('Could not copy to clipboard.');
-    }
-  }
-
-  document.getElementById('userInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.ctrlKey) findSong();
-  });
-  document.getElementById('userInput').addEventListener('input', () => {
-    updateCharCount();
-    updateSubmitState();
-  });
-  updateCharCount();
-  updateSubmitState();
-</script>
+<script src="assets/app.js" defer></script>
 </body>
 </html>

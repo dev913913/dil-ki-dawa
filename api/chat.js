@@ -1,217 +1,137 @@
-const GEMINI_MODELS = [
-  "gemini-3.1-flash-lite-preview",
-  "gemini-3-flash-preview",
-  "gemini-2.5-flash-lite",
-  "gemma-3-27b-it",
-];
+import { guard } from "./_lib/guard.js";
+import {
+  SYSTEM_PROMPT,
+  buildUserMessage,
+  looksLikeCrisis,
+  parseInput,
+  parseSong,
+} from "./_lib/song.js";
 
-const YOUTUBE_WATCH_BASE = "https://www.youtube.com/watch?v=";
+// Models can be changed from Vercel env vars without touching code:
+//   GEMINI_MODELS="gemini-2.5-flash,gemini-2.5-flash-lite"   GROQ_MODEL="llama-3.1-8b-instant"
+const GEMINI_MODELS = (process.env.GEMINI_MODELS || "gemini-2.5-flash,gemini-2.5-flash-lite")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
 
-const SYSTEM_PROMPT = `You are a wise, gentle curator of old classical Hindi songs — a musical healer who has spent decades understanding the deep connection between music and the human heart.
+const TOTAL_BUDGET_MS = 8500; // stays under Vercel's default 10s limit
+const PER_CALL_MAX_MS = 5500;
+const MIN_CALL_MS = 1500;
 
-When someone shares their mood, feeling, or problem with you, you find the ONE perfect old Hindi song that speaks to exactly what they are feeling. You have encyclopedic knowledge of Hindi film songs from the 1940s to 1980s — the golden era of Indian cinema music.
+async function callGemini(model, userMessage, timeoutMs) {
+  const generationConfig = {
+    maxOutputTokens: 1024,
+    temperature: 0.9,
+    responseMimeType: "application/json",
+  };
+  // 2.5 Flash models "think" by default, which eats the token budget.
+  if (/^gemini-2\.5-flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
 
-You understand that these old songs carry wisdom, poetry, and emotion that can heal, comfort, and guide.
-
-RULES:
-- Recommend ONLY old classical Hindi film songs — from roughly 1940s to early 1980s
-- Pick songs where the lyrics or mood DIRECTLY match the person's emotional state
-- If multiple moods are provided, balance all of them instead of focusing only on the first one
-- Never recommend the same obvious songs every time — explore the vast treasure of Hindi music
-- Consider singers like Lata Mangeshkar, Mohammed Rafi, Kishore Kumar, Mukesh, Hemant Kumar, Talat Mahmood, Geeta Dutt, Asha Bhosle and many more
-- Consider music directors like S.D. Burman, R.D. Burman, Naushad, Madan Mohan, Shankar Jaikishan, Salil Chowdhury and more
-
-RESPONSE FORMAT — return ONLY valid JSON, nothing else, no markdown, no explanation:
-{
-  "song": "Song name in Hindi/English",
-  "singer": "Singer name",
-  "film": "Film name",
-  "year": "Year",
-  "searchQuery": "exact YouTube search query to find this song",
-  "why": "One short sentence — why this song for this mood"
-}`;
-
-function buildUserMessage({ mood, selectedMoods = [], userText = "", avoidSongs = [] }) {
-  const selectedMoodsText = selectedMoods.length
-    ? selectedMoods.map((m) => `- ${m}`).join("\n")
-    : "- (none provided)";
-  const avoidSongsText = avoidSongs.length
-    ? avoidSongs.map((s) => `- ${s}`).join("\n")
-    : "- (none)";
-
-  return [
-    "Primary feeling context:",
-    mood,
-    "",
-    "Selected moods (treat as a blend):",
-    selectedMoodsText,
-    "",
-    "User text (if any):",
-    userText || "(none)",
-    "",
-    "Avoid repeating these recently suggested songs unless no better match exists:",
-    avoidSongsText,
-  ].join("\n");
-}
-
-async function tryGemini({ mood, selectedMoods, userText, avoidSongs }) {
-  if (!process.env.GEMINI_API_KEY) return null;
-
-  const userMessage = buildUserMessage({ mood, selectedMoods, userText, avoidSongs });
-
-  for (const model of GEMINI_MODELS) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ parts: [{ text: userMessage }] }],
-            generationConfig: { maxOutputTokens: 512, temperature: 0.85 },
-          }),
-        }
-      );
-
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return { text, source: `gemini:${model}` };
-    } catch {
-      continue;
-    }
-  }
-  return null;
-}
-
-async function tryGroq({ mood, selectedMoods, userText, avoidSongs }) {
-  if (!process.env.GROQ_API_KEY) return null;
-
-  const userMessage = buildUserMessage({ mood, selectedMoods, userText, avoidSongs });
-
-  try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        "x-goog-api-key": process.env.GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userMessage },
-        ],
-        max_tokens: 512,
-        temperature: 0.85,
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: userMessage }] }],
+        generationConfig,
       }),
-    });
-
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content;
-    if (text) return { text, source: "groq:llama3" };
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-function extractVideoIdsFromYoutubeHtml(html) {
-  const ids = new Set();
-  const regex = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
-  let match;
-
-  while ((match = regex.exec(html)) !== null) {
-    ids.add(match[1]);
-    if (ids.size >= 8) break;
-  }
-
-  return [...ids];
-}
-
-async function isEmbeddableYoutubeVideo(videoId) {
-  const watchUrl = `${YOUTUBE_WATCH_BASE}${videoId}`;
-  const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`;
-
-  try {
-    const res = await fetch(oEmbedUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function findEmbeddableYoutubeVideo(searchQuery) {
-  if (!searchQuery) return null;
-
-  try {
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
-    const res = await fetch(searchUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    if (!res.ok) return null;
-
-    const html = await res.text();
-    const candidateIds = extractVideoIdsFromYoutubeHtml(html);
-
-    for (const videoId of candidateIds) {
-      const embeddable = await isEmbeddableYoutubeVideo(videoId);
-      if (embeddable) {
-        return {
-          videoId,
-          watchUrl: `${YOUTUBE_WATCH_BASE}${videoId}`,
-          embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        };
-      }
+      signal: AbortSignal.timeout(timeoutMs),
     }
-  } catch {
-    return null;
-  }
+  );
 
-  return null;
+  if (!res.ok) throw new Error(`gemini ${model} HTTP ${res.status}`);
+  const data = await res.json();
+  const parts = data?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) throw new Error(`gemini ${model} empty reply`);
+  return parts
+    .filter((p) => typeof p?.text === "string" && !p.thought)
+    .map((p) => p.text)
+    .join("");
+}
+
+async function callGroq(userMessage, timeoutMs) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userMessage },
+      ],
+      max_tokens: 700,
+      temperature: 0.9,
+      response_format: { type: "json_object" },
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+
+  if (!res.ok) throw new Error(`groq HTTP ${res.status}`);
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || "";
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  res.setHeader("Cache-Control", "no-store");
 
-  const { mood, selectedMoods = [], userText = "", avoidSongs = [] } = req.body || {};
-  if (!mood) {
-    return res.status(400).json({ error: "No mood provided" });
-  }
+  if (!guard(req, res, { method: "POST", name: "chat", limit: 12, windowMs: 60_000 })) return;
 
-  const context = { mood, selectedMoods, userText, avoidSongs };
+  const parsed = parseInput(req.body);
+  if (parsed.error) return res.status(400).json({ error: parsed.error, code: "bad_input" });
+  const input = parsed.value;
 
-  // Try Gemini first, then Groq
-  const result = await tryGemini(context) || await tryGroq(context);
-
-  if (!result) {
-    return res.status(500).json({ error: "Could not find a song right now. Please try again." });
-  }
-
-  // Parse JSON from AI response
-  try {
-    const clean = result.text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-    const song = JSON.parse(clean);
-
-    const embedData = await findEmbeddableYoutubeVideo(song.searchQuery || `${song.song} ${song.singer}`);
-    if (embedData) {
-      song.youtube = embedData;
+  const attempts = [];
+  if (process.env.GEMINI_API_KEY) {
+    for (const model of GEMINI_MODELS) {
+      attempts.push({ label: `gemini:${model}`, run: (ms, msg) => callGemini(model, msg, ms) });
     }
-
-    return res.status(200).json({ song, source: result.source });
-  } catch {
-    // If JSON parse fails, return raw text
-    return res.status(200).json({ raw: result.text, source: result.source });
   }
+  if (process.env.GROQ_API_KEY) {
+    attempts.push({ label: `groq:${GROQ_MODEL}`, run: (ms, msg) => callGroq(msg, ms) });
+  }
+
+  if (!attempts.length) {
+    console.error("chat: no GEMINI_API_KEY or GROQ_API_KEY configured");
+    return res.status(503).json({
+      error: "The song finder is not set up yet. Please try again later.",
+      code: "not_configured",
+    });
+  }
+
+  const userMessage = buildUserMessage(input);
+  const started = Date.now();
+
+  for (const attempt of attempts) {
+    const left = TOTAL_BUDGET_MS - (Date.now() - started);
+    if (left < MIN_CALL_MS) break;
+
+    try {
+      const text = await attempt.run(Math.min(PER_CALL_MAX_MS, left), userMessage);
+      const result = parseSong(text);
+      if (!result) {
+        console.error(`chat: ${attempt.label} returned unusable output`);
+        continue;
+      }
+
+      const needsCare = result.needsCare || looksLikeCrisis(input.userText);
+      return res.status(200).json({ song: result.song, needsCare });
+    } catch (err) {
+      // Log the reason, never the user's text or any key.
+      console.error(`chat: ${attempt.label} failed: ${err?.message || err}`);
+    }
+  }
+
+  return res.status(502).json({
+    error: "Could not find a song right now. Please try again in a moment.",
+    code: "unavailable",
+  });
 }
