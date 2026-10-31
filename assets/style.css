@@ -586,7 +586,7 @@ textarea:focus-visible {
 .mini-btn[aria-pressed="true"] { background: rgba(223, 168, 55, 0.25); border-color: var(--border-focus); }
 
 .care-note {
-  margin: 0 0 18px; padding: 14px 16px; font-size: 14px; line-height: 1.6;
+  margin: 14px 0 0; padding: 14px 16px; font-size: 14px; line-height: 1.6;
   color: var(--cream); background: rgba(176, 116, 26, 0.18);
   border: 1px solid var(--border-focus); border-radius: 8px;
 }

@@ -37,6 +37,14 @@
 
   const DEFAULT_PLACEHOLDER = "Your song awaits...";
 
+  // Same wording check as the server (api/_lib/song.js). Running it here too means
+  // the support note still appears when the network or the server is down.
+  const CARE_EN =
+    /\b(suicid\w*|kill myself|end my life|end it all|want to die|wanna die|don'?t want to (live|be alive)|self[- ]?harm|hurt myself|khud ko (khatam|maar)\w*|jaan de\w*|marna chah\w*|mar jana chah\w*)\b/i;
+  const CARE_HI = /(आत्महत्या|मरना चाह|मर जाना चाह|जान दे|खुद को खत्म|खुद को मार)/;
+  /** True when the text contains a worrying phrase (English, Hinglish or Hindi). */
+  const looksLikeCrisis = (text) => CARE_EN.test(text) || CARE_HI.test(text);
+
   let selectedMoods = [];
   let recentSongs = [];
   let currentSong = null;
@@ -45,6 +53,7 @@
   let requestId = 0; // lets us ignore answers that arrive after Clear / a newer request
 
   // ── tiny safe storage helpers (storage can throw in private mode) ──
+  /** Reads saved songs from this browser; returns [] if storage is empty, blocked or corrupt. */
   function loadFavs() {
     try {
       const raw = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
@@ -64,6 +73,7 @@
     }
   }
 
+  /** Saves favourites to this browser; returns false if storage is unavailable. */
   function storeFavs(list) {
     try {
       localStorage.setItem(FAV_KEY, JSON.stringify(list));
@@ -77,12 +87,26 @@
   const favKey = (s) => `${s.song}|${s.singer}`.toLowerCase();
 
   // ── helpers ──
+  /** Builds a YouTube search link for a song. */
   function ytSearchUrl(query) {
     return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
   }
 
+  /** Singer, film and year that are present, in order. */
   function metaParts(song) {
     return [song.singer, song.film, song.year].filter(Boolean);
+  }
+
+  /** Shows or hides the support note. It lives outside the song area, so it also works on errors. */
+  function setCare(on) {
+    els.care.hidden = !on;
+  }
+
+  /** Removes any player so an old video cannot keep playing out of sight. */
+  function stopVideo() {
+    els.yt.textContent = "";
+    els.yt.hidden = true;
+    els.ytStatus.textContent = "";
   }
 
   function setBusy(busy) {
@@ -92,17 +116,20 @@
     updateSubmitState();
   }
 
+  /** Updates the "n / 600" counter. */
   function updateCharCount() {
     const n = els.input.value.length;
     els.count.textContent = `${n} / ${MAX_TEXT}`;
     els.count.classList.toggle("warn", n > MAX_TEXT * 0.87);
   }
 
+  /** Enables the main button only when there is a mood or text and nothing is loading. */
   function updateSubmitState() {
     const hasInput = els.input.value.trim().length > 0 || selectedMoods.length > 0;
     els.submit.disabled = inFlight || !hasInput;
   }
 
+  /** Shows a message in the empty song card (also used for errors). */
   function showPlaceholder(text, isError) {
     els.placeholderText.textContent = text;
     els.placeholder.classList.toggle("is-error", Boolean(isError));
@@ -123,6 +150,7 @@
   });
 
   // ── find a song ──
+  /** Asks the server for a song using the chosen moods and typed text. */
   async function findSong() {
     if (inFlight) return;
 
@@ -133,6 +161,9 @@
     }
 
     const myId = ++requestId;
+    const localCare = looksLikeCrisis(userText);
+    setCare(localCare);
+    stopVideo();
     chatController = new AbortController();
     const timer = setTimeout(() => chatController.abort(), CHAT_TIMEOUT_MS);
 
@@ -163,8 +194,10 @@
 
       if (myId !== requestId) return; // cleared or superseded
 
+      setCare(localCare || (data && data.needsCare === true));
+
       if (res.ok && data && data.song && typeof data.song.song === "string") {
-        showSong(data.song, data.needsCare === true);
+        showSong(data.song);
       } else if (res.status === 429) {
         showPlaceholder("Too many requests. Please wait a minute and try again.", true);
       } else {
@@ -190,7 +223,8 @@
   }
 
   // ── show a song (DOM only, never innerHTML, so AI text can't inject markup) ──
-  function showSong(song, needsCare) {
+  /** Renders a song using DOM text only (never innerHTML), then looks for its video. */
+  function showSong(song) {
     currentSong = {
       song: String(song.song || ""),
       singer: String(song.singer || ""),
@@ -215,7 +249,6 @@
 
     els.why.textContent = currentSong.why;
     els.why.hidden = !currentSong.why;
-    els.care.hidden = !needsCare;
 
     recentSongs.push(currentSong.song);
     recentSongs = recentSongs.slice(-RECENT_LIMIT);
@@ -228,9 +261,9 @@
     loadVideo(currentSong, requestId);
   }
 
+  /** Finds an embeddable video for the song; ignores the answer if a newer song replaced it. */
   async function loadVideo(song, forRequest) {
-    els.yt.hidden = true;
-    els.yt.textContent = "";
+    stopVideo();
     els.ytStatus.textContent = "Finding the recording...";
 
     const controller = new AbortController();
@@ -268,16 +301,19 @@
   }
 
   // ── favourites ──
+  /** True when this song is already in favourites. */
   function isSaved(song) {
     return favs.some((f) => favKey(f) === favKey(song));
   }
 
+  /** Syncs the Save button label with favourites. */
   function refreshSaveButton() {
     const saved = currentSong ? isSaved(currentSong) : false;
     els.save.setAttribute("aria-pressed", String(saved));
     els.save.textContent = saved ? "♥ Saved" : "♡ Save";
   }
 
+  /** Adds or removes the current song from favourites. */
   function toggleSave() {
     if (!currentSong) return;
     if (isSaved(currentSong)) {
@@ -303,6 +339,7 @@
     renderFavs();
   }
 
+  /** Redraws the saved-songs list. */
   function renderFavs() {
     els.favList.textContent = "";
     els.favSection.hidden = favs.length === 0;
@@ -350,6 +387,7 @@
   }
 
   // ── clear / copy ──
+  /** Resets the form and result, and cancels any request still running. */
   function clearAll() {
     requestId++; // invalidates anything still in flight
     if (chatController) chatController.abort();
@@ -366,16 +404,15 @@
     els.info.classList.remove("on");
     els.loading.classList.remove("on");
     els.card.classList.remove("active");
-    els.yt.hidden = true;
-    els.yt.textContent = "";
-    els.ytStatus.textContent = "";
-    els.care.hidden = true;
+    stopVideo();
+    setCare(false);
     showPlaceholder(DEFAULT_PLACEHOLDER, false);
 
     setBusy(false);
     updateCharCount();
   }
 
+  /** Copies "Song - Singer (Film, Year)" to the clipboard. */
   async function copySong() {
     if (!currentSong) return;
     const line = `${currentSong.song} — ${currentSong.singer || "Unknown singer"} (${currentSong.film || "Unknown film"}, ${currentSong.year || "Unknown year"})`;

@@ -11,6 +11,7 @@ const BROWSER_HEADERS = {
 };
 
 // oEmbed answers 200 only for videos that exist AND allow embedding.
+/** True only if the video exists and allows embedding (oEmbed answers 200). */
 async function isEmbeddable(videoId) {
   try {
     const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(
@@ -24,6 +25,7 @@ async function isEmbeddable(videoId) {
 }
 
 // Preferred: official API (set YOUTUBE_API_KEY). Reliable and respects "embeddable".
+/** Official YouTube Data API search; returns a video id or null, throws on HTTP errors. */
 async function searchWithApi(query) {
   const params = new URLSearchParams({
     part: "id",
@@ -44,6 +46,7 @@ async function searchWithApi(query) {
 }
 
 // Fallback: read the public search page. Fragile by nature, so it is time-boxed.
+/** Fallback: reads the public results page and keeps the best-ranked embeddable video. */
 async function searchByScraping(query) {
   const res = await fetch(
     `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
@@ -64,6 +67,7 @@ async function searchByScraping(query) {
   return index >= 0 ? ids[index] : null;
 }
 
+/** GET /api/video?q=... returns { videoId } (or null), cached at the CDN when found. */
 export default async function handler(req, res) {
   if (!guard(req, res, { method: "GET", name: "video", limit: 40, windowMs: 60_000 })) return;
 

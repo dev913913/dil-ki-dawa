@@ -49,9 +49,12 @@ export function isSameOrigin(req) {
   }
 }
 
-// Returns true when the request may continue. Otherwise it has already
-// answered the client and the handler must stop.
-export function guard(req, res, { method, name, limit, windowMs }) {
+/**
+ * Checks method, origin and rate limit. Returns true when the request may
+ * continue; otherwise it has already answered the client and the handler must stop.
+ * `extra` is merged into the 429 body (used to keep the care flag on errors).
+ */
+export function guard(req, res, { method, name, limit, windowMs, extra = {} }) {
   if (req.method !== method) {
     res.setHeader("Allow", method);
     res.status(405).json({ error: "Method not allowed.", code: "method" });
@@ -69,6 +72,7 @@ export function guard(req, res, { method, name, limit, windowMs }) {
     res.status(429).json({
       error: "Too many requests. Please wait a minute and try again.",
       code: "rate_limited",
+      ...extra,
     });
     return false;
   }
